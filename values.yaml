@@ -1,0 +1,40 @@
+app:
+  version: "v1.0.0"
+  port: 50051
+  image:
+    repository: "ghcr.io/anotherdanger/auth-service"
+    tag: "latest"
+  affinity:
+    key: label
+    value: app
+
+service:
+  type: "ClusterIP"
+  grpcPort: 50051
+  grpcTargetPort: 50051
+
+pdb:
+  minAvailable: 1
+
+resources:
+  hpa:
+    minReplicas: 1
+    maxReplicas: 3
+    cpu:
+      utilization: 50
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "100m"
+    memory: "128Mi"
+
+env:
+  APP_INTERNAL_PORT: 9090
+  APP_GRPC_HOST: 0.0.0.0
+  APP_GRPC_PORT:  50051
+  APP_REDIS_HOST: 
+  APP_REDIS_PORT: 
+  APP_REDIS_USERNAME:
+  APP_OTEL_HOST:
+  APP_OTEL_PORT:

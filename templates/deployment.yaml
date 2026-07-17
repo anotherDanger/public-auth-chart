@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{.Release.Name}}-deployment
+  labels:
+    {{- include "chart.labels" . | indent 4}}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-app
+  template:
+    metadata:
+      labels:
+        app:  {{.Release.Name}}-app
+        version: {{.Values.app.version}}
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "auth-service-role"
+        vault.hashicorp.com/agent-inject-secret-config: "secret/data/core-banking/auth-service"
+        vault.hashicorp.com/agent-inject-template-config: |
+          {{ `{{- with secret "secret/data/core-banking/auth-service" -}}` }}
+          export APP_REDIS_PWD="{{ `{{ .Data.data.APP_REDIS_PWD }}` }}"
+          {{ `{{- end -}}` }}
+    spec:
+      serviceAccountName: auth-service-sa
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: {{.Values.app.affinity.key}}
+                operator: In
+                values:
+                - {{.Values.app.affinity.value}}
+      containers:
+      - image:  "{{.Values.app.image.repository}}:{{.Values.app.image.tag}}"
+        name: {{.Release.Name}}-app
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          if [ -f /vault/secrets/config ]; then
+            source /vault/secrets/config
+          fi
+          ./main 
+        env:
+          - name: APP_GRPC_HOST
+            value: {{.Values.env.APP_GRPC_HOST | quote}}
+          - name: APP_GRPC_PORT
+            value: {{.Values.env.APP_GRPC_PORT | quote}}
+          - name: APP_REDIS_HOST
+            value: {{.Values.env.APP_REDIS_HOST | quote}}
+          - name: APP_REDIS_PORT
+            value: {{.Values.env.APP_REDIS_PORT | quote}}
+          - name: APP_INTERNAL_PORT
+            value: {{.Values.env.APP_INTERNAL_PORT | quote}}
+          - name: APP_REDIS_USERNAME
+            value: {{.Values.env.APP_REDIS_USERNAME | quote}}
+          - name: APP_REDIS_PWD
+            value: {{.Values.env.APP_REDIS_PWD | quote}}
+          - name: APP_OTEL_HOST
+            value: {{.Values.env.APP_OTEL_HOST | quote}}
+          - name: APP_OTEL_PORT
+            value: {{.Values.env.APP_OTEL_PORT | quote}}
+        resources:
+          requests:
+            memory: {{.Values.resources.requests.memory}}
+            cpu: {{.Values.resources.requests.cpu}}
+          limits:
+            memory: {{.Values.resources.limits.memory}}
+            cpu: {{.Values.resources.limits.cpu}}
+        ports:
+        - containerPort: {{.Values.app.port}}
+          name: grpc
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 9090
+            scheme: HTTP
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        livenessProbe:
+          grpc:
+            port: 50051
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3  
