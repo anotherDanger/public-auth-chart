@@ -15,8 +15,8 @@ Ensure that **Redis** are already **running** to pass the readiness probes. For 
 To deploy these dependencies, you can leverage the official third-party Helm charts available via **Artifact Hub**.
 
 ## ☸️ Connected Charts
-* 🗺️ **Gateway Chart** (https://github.com/anotherDanger/public-gateway-chart.git)
+* 🗺️ [**Gateway Chart**] (https://github.com/anotherDanger/public-gateway-chart.git)
 * 💳 [**Wallet Chart**] (https://github.com/anotherDanger/public-wallet-chart.git)
-* 🔔 **Notification Chart** (https://github.com/anotherDanger/public-notification-chart.git)
+* 🔔 [**Notification Chart**] (https://github.com/anotherDanger/public-notification-chart.git)
 * 📖 **Ledger Chart** (https://github.com/anotherDanger/public-ledger-chart.git)
 * 👤 [**User Chart**](https://github.com/anotherDanger/public-user-chart.git)
