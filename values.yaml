@@ -13,6 +13,9 @@ service:
   grpcPort: 50051
   grpcTargetPort: 50051
 
+gateway:
+  name: gateway
+
 pdb:
   minAvailable: 1
 
